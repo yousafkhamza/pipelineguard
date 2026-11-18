@@ -1,0 +1,4 @@
+node_modules/
+*.sarif
+.DS_Store
+Thumbs.db

@@ -1,0 +1,21 @@
+{
+  "name": "pipelineguard",
+  "version": "1.0.0",
+  "description": "Security scanner for GitHub Actions workflows: pwn requests, script injection, unpinned actions, leaked secrets and broad GITHUB_TOKEN permissions. Browser, CLI and GitHub Action.",
+  "type": "module",
+  "bin": { "pipelineguard": "cli/pipelineguard.mjs" },
+  "files": ["cli", "site/engine", "action.yml"],
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "build": "node scripts/build.mjs",
+    "scan": "node cli/pipelineguard.mjs .github/workflows",
+    "serve": "node scripts/serve.mjs"
+  },
+  "engines": { "node": ">=20" },
+  "keywords": ["github-actions", "security", "devsecops", "workflow", "linter", "sarif", "supply-chain", "ci-cd"],
+  "author": "Yousaf Hamza (https://yousafkhamza.github.io/)",
+  "license": "MIT",
+  "homepage": "https://yousafkhamza.github.io/pipelineguard/",
+  "repository": { "type": "git", "url": "git+https://github.com/yousafkhamza/pipelineguard.git" },
+  "bugs": "https://github.com/yousafkhamza/pipelineguard/issues"
+}

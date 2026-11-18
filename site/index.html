@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PipelineGuard: GitHub Actions Security Scanner (Free, In-Browser)</title>
+  <meta name="description" content="Scan GitHub Actions workflow YAML for pwn requests, script injection, unpinned actions, leaked secrets and over-broad GITHUB_TOKEN permissions. Free, runs in your browser, with AI-drafted fixes. By Yousaf Hamza.">
+  <meta name="keywords" content="GitHub Actions security scanner, GitHub Actions linter, workflow security, pull_request_target, script injection, pin actions to SHA, GITHUB_TOKEN permissions, DevSecOps, SARIF, Yousaf Hamza">
+  <meta name="author" content="Yousaf Hamza (Yousaf K Hamza)">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="canonical" href="https://yousafkhamza.github.io/pipelineguard/">
+  <meta name="theme-color" content="#1B2428">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://api.anthropic.com https://api.openai.com; base-uri 'self'; form-action 'none'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="PipelineGuard">
+  <meta property="og:title" content="PipelineGuard: find the leaks in your GitHub Actions workflows">
+  <meta property="og:description" content="Paste a workflow, see which line is exploitable, get the fix. 36 checks, runs in your browser. By Yousaf Hamza.">
+  <meta property="og:url" content="https://yousafkhamza.github.io/pipelineguard/">
+  <meta property="og:image" content="https://yousafkhamza.github.io/pipelineguard/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="PipelineGuard: a GitHub Actions workflow drawn as a pipe with coloured hazard markings on the risky steps">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="PipelineGuard: GitHub Actions security scanner">
+  <meta name="twitter:description" content="Paste a workflow, see which line is exploitable, get the fix. Runs in your browser.">
+  <meta name="twitter:image" content="https://yousafkhamza.github.io/pipelineguard/og.png">
+
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="preload" href="assets/fonts/big-shoulders-display-latin-900-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/archivo-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/css/fonts.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="modulepreload" href="engine/scan.mjs">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://yousafkhamza.github.io/pipelineguard/#app",
+        "name": "PipelineGuard",
+        "alternateName": "PipelineGuard GitHub Actions Security Scanner",
+        "url": "https://yousafkhamza.github.io/pipelineguard/",
+        "applicationCategory": "DeveloperApplication",
+        "applicationSubCategory": "Security scanner",
+        "operatingSystem": "Any (web browser), Node.js 20+",
+        "description": "Static security scanner for GitHub Actions workflows. Detects pwn requests, script injection, unpinned actions, hard-coded credentials, over-broad token permissions and more, with AI-drafted fixes and SARIF output.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "license": "https://opensource.org/licenses/MIT",
+        "codeRepository": "https://github.com/yousafkhamza/pipelineguard",
+        "author": { "@id": "https://yousafkhamza.github.io/#person" },
+        "image": "https://yousafkhamza.github.io/pipelineguard/og.png"
+      },
+      {
+        "@type": "Person",
+        "@id": "https://yousafkhamza.github.io/#person",
+        "name": "Yousaf Hamza",
+        "alternateName": ["Yousaf K Hamza", "yousafkhamza"],
+        "jobTitle": "Senior DevOps / Platform Engineer",
+        "address": { "@type": "PostalAddress", "addressLocality": "Dubai", "addressCountry": "AE" },
+        "url": "https://yousafkhamza.github.io/",
+        "sameAs": ["https://github.com/yousafkhamza"]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://yousafkhamza.github.io/pipelineguard/#site",
+        "name": "PipelineGuard",
+        "url": "https://yousafkhamza.github.io/pipelineguard/",
+        "publisher": { "@id": "https://yousafkhamza.github.io/#person" },
+        "inLanguage": "en"
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "Is my workflow uploaded anywhere?", "acceptedAnswer": { "@type": "Answer", "text": "No. The scan runs entirely in your browser. The only network request is the optional AI fix, which goes directly from your browser to Anthropic or OpenAI using your own API key." } },
+          { "@type": "Question", "name": "What is a pwn request in GitHub Actions?", "acceptedAnswer": { "@type": "Answer", "text": "A workflow triggered by pull_request_target or workflow_run runs with a write token and secrets. If it then checks out and runs the pull request's code, anyone who opens a PR from a fork can execute code with those privileges." } },
+          { "@type": "Question", "name": "Why should I pin GitHub Actions to a commit SHA?", "acceptedAnswer": { "@type": "Answer", "text": "Tags such as @v4 can be moved to different code. Pinning to a full 40-character commit SHA means a compromised action repository cannot change what your workflow runs." } },
+          { "@type": "Question", "name": "Can I run PipelineGuard in CI?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Use the yousafkhamza/pipelineguard action or run the Node CLI. It can fail the build above a severity threshold and write SARIF for GitHub code scanning." } }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a class="skip" href="#scanner">Skip to the scanner</a>
+
+  <header class="masthead">
+    <div class="wrap masthead__inner">
+      <a class="wordmark" href="./" aria-label="PipelineGuard home">
+        <svg class="wordmark__icon" viewBox="0 0 32 32" aria-hidden="true"><use href="#icon-valve"/></svg>
+        <span>PipelineGuard</span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="#scanner">Scanner</a>
+        <a href="rules/">Rules</a>
+        <a href="#ci">Use in CI</a>
+        <a href="#faq">FAQ</a>
+        <a href="https://github.com/yousafkhamza/pipelineguard" rel="noopener">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="stage">
+      <section class="hero wrap" aria-labelledby="hero-title">
+        <div class="hero__copy">
+          <p class="hero__kicker"><span class="pulse" aria-hidden="true"></span>Free, open source, runs in your browser</p>
+          <h1 id="hero-title">Find the leaks in your GitHub&nbsp;Actions workflows before someone else&nbsp;does.</h1>
+          <p class="hero__lede">Paste a workflow file. PipelineGuard checks it against <strong data-rule-count>36</strong> known attack patterns, points at the exact line, and explains the fix. Your YAML never leaves the page.</p>
+          <div class="hero__cta">
+            <a class="btn btn--primary btn--lg" href="#scanner">Scan a workflow</a>
+            <a class="btn btn--ghost btn--lg" href="rules/">Browse the rules</a>
+          </div>
+        </div>
+        <div class="hero__stack" aria-hidden="true">
+          <div class="peek peek--3">
+            <div class="peek__top"><span class="tag tag--medium">Medium</span><span class="peek__meta">PG003, line 17</span></div>
+            <p class="peek__title">Action is referenced by a movable tag</p>
+            <code class="peek__code">uses: some-org/deploy@<u>main</u></code>
+          </div>
+          <div class="peek peek--2">
+            <div class="peek__top"><span class="tag tag--high">High</span><span class="peek__meta">PG009, line 8</span></div>
+            <p class="peek__title">Self-hosted runner accepts pull request jobs</p>
+            <code class="peek__code">runs-on: [<u>self-hosted</u>, linux]</code>
+          </div>
+          <div class="peek peek--1">
+            <div class="peek__top"><span class="tag tag--critical">Critical</span><span class="peek__meta">PG001, line 12</span></div>
+            <p class="peek__title">Untrusted pull request code runs with your secrets</p>
+            <code class="peek__code">ref: <u>${{ github.event.pull_request.head.sha }}</u></code>
+            <div class="peek__fix"><span>Fix</span> switch to <b>pull_request</b> and drop the head checkout</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- The legend is a pipe: severity colours follow the industrial pipe-marking code. -->
+      <div class="legend-pipe" role="img" aria-label="Severity legend: critical is red, high is orange, medium is yellow, low is blue, info is green">
+        <div class="legend-pipe__run">
+          <span class="marker marker--critical">Critical</span>
+          <span class="marker marker--high">High</span>
+          <span class="marker marker--medium">Medium</span>
+          <span class="marker marker--low">Low</span>
+          <span class="marker marker--info">Info</span>
+          <span class="legend-pipe__flow" aria-hidden="true"></span>
+        </div>
+      </div>
+    </div>
+
+    <section id="scanner" class="bench wrap" aria-labelledby="scanner-title">
+      <h2 id="scanner-title" class="visually-hidden">Workflow scanner</h2>
+
+      <div class="bench__input">
+        <div class="toolbar">
+          <label class="toolbar__label" for="sample">Try a sample</label>
+          <select id="sample" class="select">
+            <option value="">Your own workflow</option>
+          </select>
+          <label class="btn btn--quiet" for="file">Open file
+            <input id="file" type="file" accept=".yml,.yaml,text/yaml" class="visually-hidden">
+          </label>
+        </div>
+
+        <div class="editor" id="editor">
+          <div class="editor__gutter" id="gutter" aria-hidden="true"></div>
+          <label for="yaml" class="visually-hidden">Workflow YAML</label>
+          <textarea id="yaml" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"
+            placeholder="# Paste the contents of .github/workflows/your-file.yml here"></textarea>
+        </div>
+
+        <div class="bench__actions">
+          <button class="btn btn--primary" id="scan" type="button">Scan workflow</button>
+          <span class="hint" id="status" role="status" aria-live="polite">Tip: press Ctrl + Enter to scan.</span>
+        </div>
+      </div>
+
+      <div class="bench__output" id="report" aria-live="polite">
+        <div class="empty" id="empty">
+          <svg viewBox="0 0 240 90" class="empty__art" aria-hidden="true"><use href="#art-empty"/></svg>
+          <p>Paste a workflow on the left, or pick a sample, then select <b>Scan workflow</b>. Findings show up here as markings on a map of your jobs.</p>
+        </div>
+
+        <div class="result" id="result" hidden>
+          <div class="readout">
+            <svg class="gauge" viewBox="0 0 200 128" role="img" aria-labelledby="gauge-label">
+              <title id="gauge-label">Safety score</title>
+              <g id="gauge-zones"></g>
+              <g id="gauge-ticks"></g>
+              <g class="gauge__needle" id="needle"><path d="M100 104 L97 104 L100 30 L103 104 Z"/><circle cx="100" cy="104" r="7"/></g>
+            </svg>
+            <div class="readout__text">
+              <p class="readout__score"><span id="score">0</span><small>/100</small></p>
+              <p class="readout__grade">Grade <b id="grade">A</b></p>
+              <p class="readout__counts" id="counts"></p>
+            </div>
+          </div>
+
+          <h3 class="section-title">Job map</h3>
+          <p class="section-sub">Each job is a pipe and each joint is a step. Markings show where the risk is. Select one to jump to the finding.</p>
+          <div class="pipemap" id="pipemap"></div>
+
+          <div class="findings-head">
+            <h3 class="section-title">Findings</h3>
+            <div class="findings-head__actions">
+              <button class="btn btn--quiet" id="copy-prompt" type="button">Copy AI prompt</button>
+              <button class="btn btn--ai" id="fix-all" type="button">Draft fixes with AI</button>
+            </div>
+          </div>
+          <ol class="findings" id="findings"></ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="checks wrap" aria-labelledby="checks-title">
+      <div class="checks__intro">
+        <h2 id="checks-title">What it checks</h2>
+        <p>The rules cover the attacks that have actually hit open-source projects: fork pull requests running with secrets, branch names that become shell commands, and tags that were quietly moved to malicious code. Each rule has its own write-up with a broken and a fixed example.</p>
+        <p><a class="link" href="rules/">Read the full rule reference</a></p>
+      </div>
+      <!-- rules:start -->
+      <table class="ruletable">
+        <thead><tr><th scope="col">Rule</th><th scope="col">What it catches</th><th scope="col">Default severity</th></tr></thead>
+        <tbody>
+          <tr><td><a href="rules/#pwn-request-checkout">PG001</a></td><td>Untrusted pull request code runs with a privileged token</td><td><span class="tag tag--critical">Critical</span></td></tr>
+          <tr><td><a href="rules/#script-injection">PG002</a></td><td>Attacker-controlled text is pasted straight into a shell script</td><td><span class="tag tag--high">High</span></td></tr>
+          <tr><td><a href="rules/#unpinned-action">PG003</a></td><td>Action is referenced by a movable tag or branch</td><td><span class="tag tag--medium">Medium</span></td></tr>
+          <tr><td><a href="rules/#broad-token-permissions">PG004</a></td><td>GITHUB_TOKEN permissions are not restricted</td><td><span class="tag tag--medium">Medium</span></td></tr>
+          <tr><td><a href="rules/#secret-in-script">PG005</a></td><td>Secret is interpolated directly into a run script</td><td><span class="tag tag--medium">Medium</span></td></tr>
+          <tr><td><a href="rules/#hardcoded-credential">PG006</a></td><td>Credential is committed in the workflow file</td><td><span class="tag tag--critical">Critical</span></td></tr>
+          <tr><td><a href="rules/#curl-pipe-shell">PG007</a></td><td>Remote script is piped straight into a shell</td><td><span class="tag tag--medium">Medium</span></td></tr>
+          <tr><td><a href="rules/#unsecure-commands">PG008</a></td><td>Deprecated set-env / add-path commands are re-enabled</td><td><span class="tag tag--high">High</span></td></tr>
+          <tr><td><a href="rules/#self-hosted-on-pr">PG009</a></td><td>Self-hosted runner accepts pull request jobs</td><td><span class="tag tag--high">High</span></td></tr>
+          <tr><td><a href="rules/#checkout-persists-credentials">PG010</a></td><td>actions/checkout leaves the token in .git/config</td><td><span class="tag tag--low">Low</span></td></tr>
+          <tr><td><a href="rules/#unpinned-container-image">PG011</a></td><td>Container image is not pinned to a digest</td><td><span class="tag tag--low">Low</span></td></tr>
+          <tr><td><a href="rules/#artifact-poisoning">PG012</a></td><td>Privileged workflow trusts artifacts from an untrusted run</td><td><span class="tag tag--high">High</span></td></tr>
+          <tr><td><a href="rules/#missing-timeout">PG013</a></td><td>Job has no timeout</td><td><span class="tag tag--info">Info</span></td></tr>
+          <tr><td><a href="rules/#secrets-inherit">PG014</a></td><td>Reusable workflow receives every secret</td><td><span class="tag tag--low">Low</span></td></tr>
+          <tr><td><a href="rules/#unguarded-comment-trigger">PG015</a></td><td>Anyone can trigger this job by commenting</td><td><span class="tag tag--medium">Medium</span></td></tr>
+          <tr><td><a href="rules/#privileged-trigger">PG016</a></td><td>Privileged trigger without explicit permissions</td><td><span class="tag tag--medium">Medium</span></td></tr>
+          <tr><td><a href="rules/#dispatch-input-injection">PG017</a></td><td>Manual workflow input is pasted into a shell script</td><td><span class="tag tag--medium">Medium</span></td></tr>
+          <tr><td><a href="rules/#step-output-injection">PG018</a></td><td>Step or job output is pasted into a shell script</td><td><span class="tag tag--low">Low</span></td></tr>
+          <tr><td><a href="rules/#always-true-if">PG019</a></td><td>if: condition is always true</td><td><span class="tag tag--high">High</span></td></tr>
+          <tr><td><a href="rules/#literal-credential-input">PG020</a></td><td>Password or token is passed as plain text to an action</td><td><span class="tag tag--high">High</span></td></tr>
+          <tr><td><a href="rules/#github-token-in-script">PG021</a></td><td>GITHUB_TOKEN is written into a run script</td><td><span class="tag tag--medium">Medium</span></td></tr>
+          <tr><td><a href="rules/#tls-verification-disabled">PG022</a></td><td>TLS certificate checks are turned off</td><td><span class="tag tag--medium">Medium</span></td></tr>
+          <tr><td><a href="rules/#trace-with-secrets">PG023</a></td><td>Shell tracing is on in a step that has secrets</td><td><span class="tag tag--medium">Medium</span></td></tr>
+          <tr><td><a href="rules/#artifact-uploads-workspace">PG024</a></td><td>Whole workspace is uploaded as an artifact</td><td><span class="tag tag--medium">Medium</span></td></tr>
+          <tr><td><a href="rules/#cache-in-privileged-workflow">PG025</a></td><td>Cache is used in a privileged workflow</td><td><span class="tag tag--medium">Medium</span></td></tr>
+          <tr><td><a href="rules/#deprecated-workflow-command">PG026</a></td><td>Uses the removed set-output / save-state commands</td><td><span class="tag tag--low">Low</span></td></tr>
+          <tr><td><a href="rules/#archived-action">PG027</a></td><td>Action is archived and no longer maintained</td><td><span class="tag tag--low">Low</span></td></tr>
+          <tr><td><a href="rules/#retired-runner-image">PG028</a></td><td>Job targets a retired runner image</td><td><span class="tag tag--low">Low</span></td></tr>
+          <tr><td><a href="rules/#previously-compromised-action">PG029</a></td><td>Action had a publicly reported compromise</td><td><span class="tag tag--medium">Medium</span></td></tr>
+          <tr><td><a href="rules/#typosquatted-action">PG030</a></td><td>Action name looks like a typo of a popular action</td><td><span class="tag tag--high">High</span></td></tr>
+          <tr><td><a href="rules/#privileged-container">PG031</a></td><td>Container runs with --privileged or the Docker socket</td><td><span class="tag tag--medium">Medium</span></td></tr>
+          <tr><td><a href="rules/#unlocked-dependency-install">PG032</a></td><td>Dependencies are installed without the lockfile</td><td><span class="tag tag--low">Low</span></td></tr>
+          <tr><td><a href="rules/#broad-oidc-permission">PG033</a></td><td>OIDC id-token: write is granted to the whole workflow</td><td><span class="tag tag--low">Low</span></td></tr>
+          <tr><td><a href="rules/#deploy-without-concurrency">PG034</a></td><td>Deploy workflow can run twice at the same time</td><td><span class="tag tag--info">Info</span></td></tr>
+          <tr><td><a href="rules/#workflow-run-any-branch">PG035</a></td><td>workflow_run trigger has no branch filter</td><td><span class="tag tag--low">Low</span></td></tr>
+          <tr><td><a href="rules/#unchecked-failure">PG036</a></td><td>Security or test step is allowed to fail silently</td><td><span class="tag tag--low">Low</span></td></tr>
+        </tbody>
+      </table>
+      <!-- rules:end -->
+    </section>
+
+    <section id="ci" class="ci wrap" aria-labelledby="ci-title">
+      <div class="ci__text">
+        <h2 id="ci-title">Run the same checks in CI</h2>
+        <p>The scanner is plain JavaScript with no dependencies to install, so the exact engine behind this page also runs as a GitHub Action and a Node CLI. Fail the build on high-severity findings, and send SARIF to the Security tab so issues show up inline on pull requests.</p>
+        <p>From a terminal:</p>
+        <pre class="code"><code>npx github:yousafkhamza/pipelineguard .github/workflows --fail-on high</code></pre>
+      </div>
+      <figure class="ci__file">
+        <figcaption>.github/workflows/pipelineguard.yml</figcaption>
+        <pre class="code"><code>name: workflow security
+on:
+  pull_request:
+    paths: [".github/workflows/**"]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  pipelineguard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: yousafkhamza/pipelineguard@v1 # pin to a release SHA
+        with:
+          fail-on: high
+          sarif: pipelineguard.sarif
+      - uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        if: always()
+        with:
+          sarif_file: pipelineguard.sarif</code></pre>
+      </figure>
+    </section>
+
+    <section id="faq" class="faq wrap" aria-labelledby="faq-title">
+      <h2 id="faq-title">Questions</h2>
+      <details>
+        <summary>Is my workflow uploaded anywhere?</summary>
+        <p>No. Parsing and every check run in your browser. The only network request is the optional AI fix, which goes straight from your browser to Anthropic or OpenAI with your own API key. The key is kept in memory for this tab and is never stored by this site.</p>
+      </details>
+      <details>
+        <summary>What is a "pwn request"?</summary>
+        <p>Workflows triggered by <code>pull_request_target</code> or <code>workflow_run</code> run with a write token and your secrets, even when the event came from a fork. If such a workflow checks out and builds the pull request's code, anyone can open a PR that runs their code with your privileges. Rule <a href="rules/#pwn-request-checkout">PG001</a> catches this.</p>
+      </details>
+      <details>
+        <summary>Why pin actions to a commit SHA instead of @v4?</summary>
+        <p>A tag is a pointer that the action's owner, or anyone who compromises their account, can move. In March 2025 the tags of a popular action were rewritten to dump CI secrets into public logs. A full 40-character SHA can't be moved. Keep the version in a comment and let Dependabot update it.</p>
+      </details>
+      <details>
+        <summary>How is the score worked out?</summary>
+        <p>The score starts at 100. Each finding takes points off by severity (critical 35, high 20, medium 8, low 3, info 1), with smaller deductions for repeats of the same severity. Any critical finding caps the grade at D.</p>
+      </details>
+      <details>
+        <summary>Does a clean result mean the workflow is safe?</summary>
+        <p>It means none of these known patterns were found. Static checks can't see what a third-party action does internally or how your repository settings are configured. Treat PipelineGuard as a first review, not a sign-off.</p>
+      </details>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer__inner">
+      <p>PipelineGuard was built by <a href="https://yousafkhamza.github.io/" rel="author">Yousaf Hamza</a> (Yousaf K Hamza), a DevOps and platform engineer in Dubai. It's open source under the MIT licence.</p>
+      <p><a href="https://github.com/yousafkhamza/pipelineguard">Source on GitHub</a> <span aria-hidden="true">/</span> <a href="https://github.com/yousafkhamza/pipelineguard/issues/new">Report a missed pattern</a></p>
+    </div>
+  </footer>
+
+  <dialog class="ai" id="ai-dialog" aria-labelledby="ai-title">
+    <form method="dialog" class="ai__close"><button class="btn btn--quiet" aria-label="Close">Close</button></form>
+    <h2 id="ai-title">Draft fixes with AI</h2>
+    <p class="ai__note">Your key goes straight from this browser to the provider. It stays in memory for this tab only and is gone when you close the tab.</p>
+    <div class="ai__grid">
+      <label>Provider
+        <select id="ai-provider" class="select">
+          <option value="anthropic">Anthropic (Claude)</option>
+          <option value="openai">OpenAI</option>
+        </select>
+      </label>
+      <label>Model
+        <input id="ai-model" class="input" value="claude-sonnet-5-5" autocomplete="off" spellcheck="false">
+      </label>
+      <label class="ai__key">API key
+        <input id="ai-key" class="input" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your API key">
+      </label>
+    </div>
+    <p class="ai__scope" id="ai-scope"></p>
+    <div class="ai__actions">
+      <button class="btn btn--ai" id="ai-run" type="button">Draft the fix</button>
+      <button class="btn btn--quiet" id="ai-copy-prompt" type="button">Copy prompt instead</button>
+    </div>
+    <div class="ai__out" id="ai-out" hidden></div>
+  </dialog>
+
+  <svg width="0" height="0" class="visually-hidden" aria-hidden="true">
+    <symbol id="icon-valve" viewBox="0 0 32 32">
+      <rect x="1" y="12" width="30" height="8" rx="1.5" fill="currentColor"/>
+      <rect x="11" y="9" width="10" height="14" rx="1.5" fill="#EFC12B" stroke="currentColor" stroke-width="2"/>
+      <rect x="15" y="2" width="2" height="8" fill="currentColor"/>
+      <rect x="9" y="1" width="14" height="3" rx="1.5" fill="currentColor"/>
+    </symbol>
+    <symbol id="art-empty" viewBox="0 0 240 90">
+      <rect x="0" y="38" width="240" height="16" rx="3" fill="#B7BFBB"/>
+      <rect x="0" y="40" width="240" height="3" fill="#E4E8E5"/>
+      <rect x="54" y="30" width="8" height="32" rx="1.5" fill="#8C9792"/>
+      <rect x="116" y="30" width="8" height="32" rx="1.5" fill="#8C9792"/>
+      <rect x="178" y="30" width="8" height="32" rx="1.5" fill="#8C9792"/>
+    </symbol>
+  </svg>
+
+  <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>

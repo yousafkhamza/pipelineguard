@@ -1,0 +1,43 @@
+name: PipelineGuard
+description: Scan GitHub Actions workflows for pwn requests, script injection, unpinned actions, leaked secrets and broad token permissions.
+author: Yousaf Hamza
+branding:
+  icon: shield
+  color: yellow
+
+inputs:
+  path:
+    description: Workflow files or directories to scan (space-separated).
+    default: .github/workflows
+  fail-on:
+    description: Fail the step if any finding is at or above this severity (critical, high, medium, low, info, none).
+    default: high
+  sarif:
+    description: Optional path to write a SARIF report for GitHub code scanning.
+    default: ""
+
+outputs:
+  sarif:
+    description: Path of the SARIF report, if one was written.
+    value: ${{ steps.scan.outputs.sarif }}
+
+runs:
+  using: composite
+  steps:
+    - id: scan
+      shell: bash
+      env:
+        PG_CLI: ${{ github.action_path }}/cli/pipelineguard.mjs
+        PG_PATH: ${{ inputs.path }}
+        PG_FAIL_ON: ${{ inputs.fail-on }}
+        PG_SARIF: ${{ inputs.sarif }}
+      run: |
+        set -euo pipefail
+        read -r -a paths <<< "$PG_PATH"
+        status=0
+        if [[ -n "$PG_SARIF" ]]; then
+          node "$PG_CLI" "${paths[@]}" --format sarif --fail-on none --output "$PG_SARIF"
+          echo "sarif=$PG_SARIF" >> "$GITHUB_OUTPUT"
+        fi
+        node "$PG_CLI" "${paths[@]}" --fail-on "$PG_FAIL_ON" || status=$?
+        exit "$status"
